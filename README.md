@@ -1,6 +1,6 @@
-# Synthetic Proteomics Data Generator
+# SynthProteomics: A Probabilistic Fuzzy Rule-Based Framework for Synthetic Clinical and Proteomics Data Simulation in Endometrial Cancer Research
 
-A **rule-based synthetic proteomics data generator** integrating clinical factors and literature-derived knowledge. This tool allows researchers to simulate realistic proteomics datasets for testing pipelines, validating models, and exploring biological hypotheses—all without requiring patient samples.
+SynthProteomics is introduced as an openly accessible, Gradio-based Python framework for generating the realistic, non-identifiable synthetic datasets across the clinical and proteomic domains. Clinical profiles are simulated using a probabilistic rule-based engine that models the interdependencies among patient factors, including obesity, age, and cancer stage. 
 
 ---
 

@@ -148,28 +148,7 @@ Augmented a small real-world dataset (n=47, TCGA-UCEC) with 500 synthetic patien
 
 Synthetic clinical variables were validated against AIHW 2023 cancer registry statistics using Kolmogorov-Smirnov tests — **p > 0.05** for age, BMI, and stage distributions. Proteomic ranges were benchmarked against HPA expression quintiles for matched endometrial tissue.
 
----
 
-## Repository Contents
-
-```
-Synthetic-omics-data/
-├── app.py                        # Gradio interface entry point
-├── requirements.txt
-├── protein_regulation_db.csv     # 207 genes with regulation direction + HPA data
-├── hpa_normal_tissue_ref.csv     # HPA normal tissue expression reference
-├── notebooks/
-│   ├── use_case_1_classifier.ipynb
-│   ├── use_case_2_differential_expression.ipynb
-│   └── use_case_3_augmentation.ipynb
-├── example_outputs/
-│   ├── clinical_data_example.csv
-│   └── protein_abundance_example.csv
-└── docs/
-    └── algorithm.md
-```
-
----
 
 ## Target Users
 

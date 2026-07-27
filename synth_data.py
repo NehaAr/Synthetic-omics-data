@@ -7,48 +7,6 @@ Author: Neha Arora
 Affiliation: University of Newcastle, Callaghan, Australia
 Copyright (c) 2026 Neha Arora — MIT License
 GitHub: https://github.com/NehaAr/Synthetic-omics-data
-
-════════════════════════════════════════════════════════════════════════
-ALIGNMENT WITH APPLICATION NOTE (Section-by-Section):
-
-Section 2.1 — Clinical Data Simulation
-  PAPER SAYS: "probabilistic rule-based engine that encodes clinically
-  established interdependencies among patient attributes"
-
-
-Section 2.2 — Proteomic Data Simulation
-  PAPER SAYS: "fuzzy rule-based layer associates clinical parameters
-  (tumor grade and stage) with magnitude of proteomic perturbations"
-  CODE CHANGE: Renamed checkpointers with descriptive names matching the
-  paper's logic. The six pathways now explicitly reflect the fuzzy
-  membership concept described in the paper — regulation direction and
-  prognostic significance act as fuzzy linguistic variables (UP/DOWN/UP/DOWN)
-  mapped to Gaussian perturbation magnitudes (log2FC ranges).
-
-Section 2.3 — Gradio Interface
-  PAPER SAYS: "users can specify cohort size, cancer subtype, stage
-  distribution, desired proteomic panel; outputs as CSV"
-  CODE CHANGE: Added cancer subtype selector, stage distribution filter,
-  CSV download button — these were MISSING from original code but stated
-  in the paper.
-
-Section 3 — Use Cases
-  PAPER SAYS: "82% accuracy Random Forest classifier"
-  CODE CHANGE: Added a use_case_1_random_forest() demo function that
-  trains and evaluates the classifier described in the paper using
-  synthetic data, making the use case reproducible.
-
-════════════════════════════════════════════════════════════════════════
-BUGS FIXED (from previous analysis):
-  BUG 1: .splt('/',',') → re.split() [12 occurrences in CP4, CP6]
-  BUG 2: Grade[index]=='Type1' → Grade[index]=='Grade1'
-  BUG 3: gene_prognosis_indicator[None] in CP3 → safe fallback 'no'
-  BUG 4: list1 + list2 + list3 on numpy arrays → np.concatenate()
-  BUG 5: plots() passed column name string to hist → pass actual data
-  BUG 6: clinical_data initialised as list [] → now pd.DataFrame()
-  BUG 7: Missing LOW regulation handler → added with mild downregulation
-  BUG 8: generate_abundance dict was global → moved inside patient loop
-════════════════════════════════════════════════════════════════════════
 """
 import subprocess, sys
 subprocess.run([sys.executable, "-m", "pip", "install", "gradio", "--quiet"], check=False)
@@ -348,13 +306,18 @@ def generate_person_data(num_records, selected_columns,
 
     # ── Ethnicity: Added per paper Section 2.1 ───────────────────────
     # Distribution reflects Australian/Western population estimates
+    #ethnicities = random.choices(
+       # ['Caucasian','Asian','African','Hispanic','Indigenous Australian',
+       #  'Middle Eastern','South Asian','Other'],
+       # weights=[0.60, 0.12, 0.08, 0.06, 0.04, 0.04, 0.04, 0.02],
+        #k=num_records
+    #)
     ethnicities = random.choices(
-        ['Caucasian','Asian','African','Hispanic','Indigenous Australian',
-         'Middle Eastern','South Asian','Other'],
-        weights=[0.60, 0.12, 0.08, 0.06, 0.04, 0.04, 0.04, 0.02],
-        k=num_records
-    )
-
+    ['European','East Asian','South Asian','Middle Eastern',
+     'African','Indigenous Australian','Other'],
+    weights=[0.55, 0.15, 0.10, 0.05, 0.03, 0.03, 0.09],
+    k=num_records
+     )
     patient_id, Treatment, Menopause = [], [], []
     Grade, Stage, Myometrial_invasion = [], [], []
     Nulliparity, Tumor_type, Subtype  = [], [], []

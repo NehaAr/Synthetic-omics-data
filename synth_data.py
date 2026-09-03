@@ -102,14 +102,7 @@ protein_abundance_dictionary = {
 clinical_data   = pd.DataFrame()
 protein_data    = []
 
-# ══════════════════════════════════════════════════════════════════════
-# HPA NORMAL TISSUE EXPRESSION (Human Protein Atlas)
-# Reference: Uhlen M, et al. Science 347:1260419 (2015)
-# TPM thresholds per paper Section 2.2:
-#   >100 nTPM = highly expressed (UP)
-#   10-100 nTPM = moderately expressed (MODERATE)
-#   <10 nTPM = lowly expressed (DOWN)
-# ══════════════════════════════════════════════════════════════════════
+
 try:
     normal_tissue_expression = pd.read_csv('/content/NOT_new_rna.tsv', sep='\t')
 
@@ -255,21 +248,6 @@ def assign_abundance(regulation, normal_reg, prognostic):
         return sample_neutral()
 
 
-# ══════════════════════════════════════════════════════════════════════
-# SECTION 2.1 — CLINICAL DATA SIMULATION
-# Paper: "probabilistic rule-based engine encoding clinically established
-# interdependencies among patient attributes"
-# Primary variables per paper: age, BMI, ethnicity, tumor stage (FIGO),
-# histological subtype, treatment modality, survival outcome
-#
-# CHANGES FROM ORIGINAL:
-# + Added ethnicity (listed in paper Section 2.1 as primary variable)
-# + Added survival_outcome (listed in paper Section 2.1 as primary variable)
-# + Added subtype (endometrioid/serous/clear cell per paper Section 2.1)
-# + Added subtype_filter and stage_filter params for Gradio Section 2.3
-# + BUG FIX 2: Grade comparison corrected from 'Type1' → 'Grade1'
-# + BUG FIX 6: clinical_data now pd.DataFrame not list
-# ══════════════════════════════════════════════════════════════════════
 def generate_person_data(num_records, selected_columns,
                          subtype_filter="All", stage_filter="All"):
     """
@@ -304,14 +282,7 @@ def generate_person_data(num_records, selected_columns,
         2
     )
 
-    # ── Ethnicity: Added per paper Section 2.1 ───────────────────────
-    # Distribution reflects Australian/Western population estimates
-    #ethnicities = random.choices(
-       # ['Caucasian','Asian','African','Hispanic','Indigenous Australian',
-       #  'Middle Eastern','South Asian','Other'],
-       # weights=[0.60, 0.12, 0.08, 0.06, 0.04, 0.04, 0.04, 0.02],
-        #k=num_records
-    #)
+   
     ethnicities = random.choices(
     ['European','East Asian','South Asian','Middle Eastern',
      'African','Indigenous Australian','Other'],
@@ -436,24 +407,7 @@ def generate_person_data(num_records, selected_columns,
     return clinical_data[valid_cols] if valid_cols else clinical_data
 
 
-# ══════════════════════════════════════════════════════════════════════
-# SECTION 2.2 — PROTEOMIC DATA SIMULATION
-# Paper: "fuzzy rule-based layer associates clinical parameters (tumor
-# grade and stage) with magnitude of proteomic perturbations, capturing
-# continuous and graded nature of biological variation"
-#
-# SIX CHECKPOINTERS — now explicitly named and documented:
-#   CP1: In literature DB + In HPA + Factor=NA   (general regulation)
-#   CP2: NOT in literature  + In HPA             (HPA-only)
-#   CP3: In literature      + NOT in HPA + NA    (literature-only, safe)
-#   CP4: In literature      + NOT in HPA + Factor (stage/grade-gated)
-#   CP5: Neither source available                 (neutral fallback)
-#   CP6: In literature + In HPA + Factor          (full gated)
-#
-# BUG FIX 8: generate_abundance dict now initialised per patient inside
-# the outer loop — original was a global dict causing cross-patient
-# contamination of abundance values.
-# ══════════════════════════════════════════════════════════════════════
+
 def generate_protein_abundance_data(num_records, protein_list):
     """
     Generates log2 fold-change protein abundance values per patient.
@@ -500,8 +454,7 @@ def generate_protein_abundance_data(num_records, protein_list):
                            if index_protein is not None else "NA"
             normal_reg   = normal_tisue_regulation.iloc[index_normal] \
                            if index_normal is not None else "moderate"
-            # BUG FIX 3: original code accessed gene_prognosis_indicator[None]
-            # in CP3/CP4 when index_normal was None → RuntimeError
+         
             prognostic   = gene_prognosis_indicator.iloc[index_normal] \
                            if index_normal is not None else "no"
 
@@ -510,40 +463,26 @@ def generate_protein_abundance_data(num_records, protein_list):
                                factor_matches_patient(
                                    factor_str, stage_arr, grade_arr, menopause_arr))
 
-            # ══════════════════════════════════════════════════════════
-            # CP1: In literature (NA factor) + In HPA
-            # General regulation — no stage/grade specificity
-            # ══════════════════════════════════════════════════════════
+         
             if (index_protein is not None and index_normal is not None
                     and factor_is_na):
                 generate_abundance[i] = assign_abundance(
                     regulation, normal_reg, prognostic)
 
-            # ══════════════════════════════════════════════════════════
-            # CP2: NOT in literature + In HPA
-            # Use HPA baseline direction as surrogate regulation signal
-            # ══════════════════════════════════════════════════════════
+      
             elif index_protein is None and index_normal is not None:
                 inferred_reg = ("up"   if normal_reg == "up"   else
                                "down"  if normal_reg == "down" else "up/down")
                 generate_abundance[i] = assign_abundance(
                     inferred_reg, normal_reg, prognostic)
 
-            # ══════════════════════════════════════════════════════════
-            # CP3: In literature (NA factor) + NOT in HPA
-            # BUG FIX 3: was gene_prognosis_indicator[None] → crash
-            # Now uses safe fallback: prognostic='no', normal_reg='moderate'
-            # ══════════════════════════════════════════════════════════
+         
             elif (index_protein is not None and index_normal is None
                       and factor_is_na):
                 generate_abundance[i] = assign_abundance(
                     regulation, "moderate", "no")
 
-            # ══════════════════════════════════════════════════════════
-            # CP4: In literature (factor-specific) + NOT in HPA
-            # Fuzzy rule: activate strong perturbation only when patient's
-            # stage/grade/menopause matches the protein's factor condition
-
+         
             elif (index_protein is not None and index_normal is None
                       and not factor_is_na):
                 if factor_matched:
@@ -552,20 +491,11 @@ def generate_protein_abundance_data(num_records, protein_list):
                 else:
                     generate_abundance[i] = sample_neutral()
 
-            # ══════════════════════════════════════════════════════════
-            # CP5: Neither literature nor HPA
-            # Baseline noise — protein biology unknown
-            # ══════════════════════════════════════════════════════════
+         
             elif index_protein is None and index_normal is None:
                 generate_abundance[i] = sample_neutral()
 
-            # ══════════════════════════════════════════════════════════
-            # CP6: In literature (factor-specific) + In HPA
-            # Full fuzzy evaluation: regulation + prognostics + HPA baseline
-            # + stage/grade factor gate
-            # BUG FIX 1: was .splt() — AttributeError (12 occurrences here)
-            # BUG FIX 4: was list1+list2+list3 on numpy arrays
-            # ══════════════════════════════════════════════════════════
+          
             elif (index_protein is not None and index_normal is not None
                       and not factor_is_na):
                 if factor_matched:
@@ -582,12 +512,7 @@ def generate_protein_abundance_data(num_records, protein_list):
     return all_outputs
 
 
-# ══════════════════════════════════════════════════════════════════════
-# SECTION 3 — USE CASE 1: Random Forest Classifier
-# Paper: "training a Random Forest classifier for endometrial cancer
-# stage prediction achieving 82% accuracy on synthetic data"
-# ADDED: This function was described in the paper but missing from code
-# ══════════════════════════════════════════════════════════════════════
+
 def use_case_1_random_forest():
     """
     Demonstrates Use Case 1 from paper Section 3:
@@ -638,9 +563,6 @@ def use_case_1_random_forest():
         return f"Error: {str(e)}"
 
 
-# ══════════════════════════════════════════════════════════════════════
-# WRAPPER FOR GRADIO PROTEIN TAB
-# ══════════════════════════════════════════════════════════════════════
 def wrapper(num_records, text_input):
     try:
         lst = ast.literal_eval(text_input)
@@ -652,11 +574,7 @@ def wrapper(num_records, text_input):
     return generate_protein_abundance_data(num_records, protein_list=lst)
 
 
-# ══════════════════════════════════════════════════════════════════════
-# CSV DOWNLOAD HELPER
-# ADDED per paper Section 2.3: "outputs downloadable as CSV files"
-# Original code had no download button in the Gradio interface
-# ══════════════════════════════════════════════════════════════════════
+
 def download_clinical_csv():
     """Export synthetic clinical data as downloadable CSV."""
     if clinical_data.empty:
@@ -682,12 +600,7 @@ def download_protein_csv(num_records, text_input):
     return path
 
 
-# ══════════════════════════════════════════════════════════════════════
-# DISTRIBUTION PLOTS
-# BUG FIX 5: original plots() passed column name string to hist()
-# e.g. axes[c,index].hist('Ages', data=clinical_data) — this doesn't
-# work correctly. Now explicitly passes clinical_data[col] array.
-# ══════════════════════════════════════════════════════════════════════
+
 def plots():
     if clinical_data.empty:
         fig, ax = plt.subplots(figsize=(6, 3))
@@ -732,19 +645,7 @@ def plots():
     return fig
 
 
-# ══════════════════════════════════════════════════════════════════════
-# SECTION 2.3 — GRADIO INTERFACE
-# Paper: "browser-accessible Gradio interface requiring no programming
-# experience; users specify cohort size, cancer subtype, stage
-# distribution, desired proteomic panel; outputs as CSV"
-#
-# CHANGES FROM ORIGINAL:
-# + Added subtype selector (Endometrioid/Serous/Clear Cell/All)
-# + Added stage filter (Stage1/Stage2/Stage3/Stage4/All)
-# + Added CSV download buttons (completely missing from original)
-# + Added Use Case 1 RF classifier tab (described in paper but absent)
-# + Added descriptive tab labels and header markdown
-# ══════════════════════════════════════════════════════════════════════
+
 with gr.Blocks(title="SynthProteomics") as demo:
 
     gr.Markdown("""

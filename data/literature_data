@@ -1,227 +1,233 @@
+# Protein Abundance Dictionary
+
+**Total Entries:** 230 | **Unique Genes:** 195 | **Duplicated Entries:** 35
+
 | Gene | Regulation | Factor | Count |
 |------|-----------|--------|-------|
-| IFIT3 ⚠️ | UP | NA | 2 |
-| PARP9 ⚠️ | UP | NA | 2 |
-| SLC34A2 | UP | NA | 1 |
-| CYB5R1 | UP | NA | 1 |
-| PTPN1 | UP | NA | 1 |
-| DPT ⚠️ | DOWN | NA | 2 |
-| SLP | UP | NA | 1 |
-| ANXA2 ⚠️ | UP | NA | 2 |
-| PRDX1 | UP | NA | 1 |
-| CTNNB | DOWN | NA | 1 |
-| HMGB3 | UP | NA | 1 |
-| CLC1 | DOWN | NA | 1 |
-| EIF4A1 ⚠️ | UP | NA | 2 |
-| PRDX6 ⚠️ | UP | NA | 3 |
-| ENO1 ⚠️ | UP | NA | 3 |
-| ANXA4 | DOWN | NA | 1 |
-| EMD | UP/DOWN | NA | 1 |
-| KU70 | UP/DOWN | NA | 1 |
-| GRP78 | UP | STAGE1A | 1 |
-| GSTP1 | UP | STAGE2,stage3 | 1 |
-| ACTG ⚠️ | UP | NA | 2 |
-| DIA3 | DOWN | STAGE2 | 1 |
-| ENOA ⚠️ | UP/DOWN | NA | 3 |
-| ALBU | UP | NA | 1 |
-| ACTB ⚠️ | DOWN | STAGE1B,stage3 | 2 |
-| ACTG ⚠️ | DOWN | NA | 2 |
-| KRT8 | UP | STAGE3 | 1 |
-| ANXA1 ⚠️ | UP | NA | 2 |
-| ENOA ⚠️ | UP | STAGE3 | 3 |
-| TRFE | UP/DOWN | STAGE3 | 1 |
-| HSPB1 | UP/DOWN | NA | 1 |
-| EF-TU | UP/DOWN | NA | 1 |
-| IDH1 ⚠️ | UP/DOWN | NA | 2 |
-| SOD1 | UP/DOWN | NA | 1 |
-| CALR ⚠️ | UP/DOWN | NA | 2 |
-| RPSA ⚠️ | UP/DOWN | NA | 2 |
-| UAP56 | UP/DOWN | NA | 1 |
-| PSME1 | UP | NA | 1 |
-| PDIA3 | UP | NA | 1 |
-| CAH1 | UP/DOWN | NA | 1 |
-| IDHC | UP/DOWN | NA | 1 |
-| PPIA | UP/DOWN | NA | 1 |
-| PPIB | UP/DOWN | NA | 1 |
-| ZNF844 | UP/DOWN | NA | 1 |
-| ALDOA | UP/DOWN | NA | 1 |
-| ENO1 ⚠️ | UP/DOWN | NA | 3 |
-| KRT10 | UP/DOWN | NA | 1 |
-| ABRACL | UP/DOWN | NA | 1 |
-| PGAM2 | UP | NA | 1 |
-| FGB | UP | NA | 1 |
-| ANXA3 | UP | NA | 1 |
-| CTNB1 | UP | NA | 1 |
-| XPO2 | DOWN | NA | 1 |
-| CAPG | DOWN | NA | 1 |
-| MMP9 | DOWN | NA | 1 |
-| EWSR1 | DOWN | NA | 1 |
-| PKM | DOWN | NA | 1 |
-| NAMPT | UP | NA | 1 |
-| ENOA ⚠️ | UP | NA | 3 |
-| CATD | UP | NA | 1 |
-| LDHA ⚠️ | UP | NA | 2 |
-| SPIT1 | UP | NA | 1 |
-| OSTP | DOWN | NA | 1 |
-| MPO | DOWN | NA | 1 |
-| CASP3 | DOWN | NA | 1 |
-| CADH1 | UP | NA | 1 |
-| TUBA1A | UP | POSTMENOPAUSAL | 1 |
-| TIGAR | UP | POSTMENOPAUSAL | 1 |
-| SEC11A | UP | POSTMENOPAUSAL | 1 |
-| CENPV | UP | POSTMENOPAUSAL | 1 |
-| TMSB4X ⚠️ | UP | POSTMENOPAUSAL | 2 |
-| COL1A2 ⚠️ | UP | POSTMENOPAUSAL | 4 |
-| S100A16 ⚠️ | DOWN | POSTMENOPAUSAL | 2 |
-| NEBL | DOWN | POSTMENOPAUSAL | 1 |
-| OGN ⚠️ | DOWN | POSTMENOPAUSAL | 2 |
-| COL1A2 ⚠️ | DOWN | NA | 4 |
-| S100A16 ⚠️ | DOWN | NA | 2 |
-| SLC9A3R1 | UP | NA | 1 |
-| DNAJB11 | UP | NA | 1 |
-| RBBP4 | UP | NA | 1 |
-| MYH11 | UP | NA | 1 |
-| OGN ⚠️ | UP | NA | 2 |
-| GNLY | DOWN | NA | 1 |
-| MZB1 | DOWN | GRADE2 | 1 |
-| MX1 | DOWN | NA | 1 |
-| NANS | DOWN | NA | 1 |
-| TMED9 | UP | NA | 1 |
-| TPPP3 | UP | NA | 1 |
-| HNRNPF | UP | NA | 1 |
-| NOLC1 | UP | NA | 1 |
-| SLC4A1 | UP | NA | 1 |
-| COL5A1 | DOWN | NA | 1 |
-| FGA | DOWN | NA | 1 |
-| HBA1 | DOWN | NA | 1 |
-| COL1A2 ⚠️ | DOWN | NA | 4 |
-| SNRPC | DOWN | Grade3 | 1 |
-| UBE2V2 | UP | Grade3 | 1 |
-| COL1A1 | UP/DOWN | Grade3 | 1 |
-| BCAM | UP/DOWN | Grade3 | 1 |
-| PTMA | UP/DOWN | Grade3 | 1 |
-| DEFA1 | UP/DOWN | NA | 1 |
-| S100A8 ⚠️ | UP/DOWN | NA | 2 |
-| LTF ⚠️ | UP/DOWN | NA | 3 |
-| CAMP | UP/DOWN | NA | 1 |
-| AZU1 | UP/DOWN | NA | 1 |
-| COL1A2 ⚠️ | UP/DOWN | Grade3 | 4 |
-| SEC63 | UP/DOWN | Grade3 | 1 |
-| LDHB | UP/DOWN | Grade3 | 1 |
-| ABHD14B | UP/DOWN | Grade3 | 1 |
-| LTF ⚠️ | UP/DOWN | Grade3 | 3 |
-| SARS1 | UP/DOWN | Grade3 | 1 |
-| ATP1B1 | UP/DOWN | Grade3 | 1 |
-| IARS1 | UP/DOWN | Grade3 | 1 |
-| PNP | UP/DOWN | Grade3 | 1 |
-| SFN | UP/DOWN | Grade3 | 1 |
-| ACTA2 | UP/DOWN | NA | 1 |
-| TPR | UP/DOWN | NA | 1 |
-| MAP4 | UP | NA | 1 |
-| HBG2 | UP/Down | NA | 1 |
-| PSMD11 | UP/Down | NA | 1 |
-| SLC2A11 | UP/Down | NA | 1 |
-| SLC2A1 | UP/Down | NA | 1 |
-| SRRM2 | UP/DOWN | NA | 1 |
-| U2AF1 | UP/Down | NA | 1 |
-| TMSB4X ⚠️ | UP/Down | NA | 2 |
-| DVL-2 | UP/Down | NA | 1 |
-| HSP8 | UP/Down | NA | 1 |
-| EIF4G2 | UP | NA | 1 |
-| F13A1 | UP | NA | 1 |
-| GFM1 | UP | NA | 1 |
-| NPEPL1 | UP | NA | 1 |
-| SARS2 | UP | NA | 1 |
-| SNTB1 | LOW | NA | 1 |
-| UBR4 | LOW | NA | 1 |
-| USP47 | LOW | NA | 1 |
-| WDR5 | LOW | NA | 1 |
-| ASS1 ⚠️ | UP | NA | 2 |
-| PFAS | UP | NA | 1 |
-| ckb | UP | NA | 1 |
-| hk2 | UP | NA | 1 |
-| MAPKAPK3 | UP | NA | 1 |
-| SERPINA1 | LOW | NA | 1 |
-| TAGLN2 ⚠️ | LOW | NA | 2 |
-| TPI1 ⚠️ | UP/DOWN | NA | 2 |
-| ENO1 ⚠️ | UP/DOWN | NA | 3 |
-| ANXA2 ⚠️ | UP | NA | 2 |
-| ANXA1 ⚠️ | UP | NA | 2 |
-| SRPK1 ⚠️ | DOWN | NA | 2 |
-| PTPN6 | UP | NA | 1 |
-| ATP5A | UP | NA | 1 |
-| TUBB | UP | NA | 1 |
-| ERBB2 ⚠️ | UP | NA | 2 |
-| EGFR ⚠️ | DOWN | NA | 2 |
-| ACTN4 | UP | TYPE 2 | 1 |
-| UBE2N | UP | TYPE 1 | 1 |
-| PKM2 ⚠️ | UP | NA | 2 |
-| HSPA5 | UP | NA | 1 |
-| LMNAA/C | UP | NA | 1 |
-| HRNR | UP | NA | 1 |
-| MDH2 | UP | GRADE1,grade3,stage1,stage3 | 1 |
-| STMN1 ⚠️ | UP | GRADE1,GRADE3 | 2 |
-| CKB | UP | NA | 1 |
-| DJ-1 | UP | TYPE1 | 1 |
-| PRKCSH | UP | TYPE1 | 1 |
-| NCL | UP | TYPE1 | 1 |
-| GON7 | UP | STAGE1A,STAGE1B | 1 |
-| APOA1 | UP | NA | 1 |
-| S100A | UP | NA | 1 |
-| PKM2 ⚠️ | UP | NA | 2 |
-| HSP10 | UP | NA | 1 |
-| EC1 | UP | type 1 | 1 |
-| EC2 | UP | NA | 1 |
-| PKM1 | UP | NA | 1 |
-| WFDC2 | UP | NA | 1 |
-| CLU | DOWN | NA | 1 |
-| MUC5B | UP | NA | 1 |
-| COX2 | UP | NA | 1 |
-| PRDX3 | UP | NA | 1 |
-| PRDX5 | UP | NA | 1 |
-| PRDX6 ⚠️ | UP | NA | 3 |
-| RDX4 | UP | NA | 1 |
-| HNRNPA1 | UP | NA | 1 |
-| CTSB | UP | stage1B | 1 |
-| CALU | UP | NA | 1 |
-| CACYBP | UP | NA | 1 |
-| LDHA ⚠️ | UP | NA | 2 |
-| P38MAPK | UP | stage1A | 1 |
-| NFKB | UP | NA | 1 |
-| ERK1/2 | UP | NA | 1 |
-| PRDX6 ⚠️ | UP | NA | 3 |
-| EIF4A1 ⚠️ | UP | NA | 2 |
-| CLIC1 | DOWN | NA | 1 |
-| CLIC4 | DOWN | NA | 1 |
-| TAGLN2 ⚠️ | UP | NA | 2 |
-| TPI1 ⚠️ | UP | NA | 2 |
-| TPI-1 | UP | NA | 1 |
-| HSPA8 | UP | NA | 1 |
-| ATF2 | UP | NA | 1 |
-| JUN | UP | NA | 1 |
-| TAF1 | UP | NA | 1 |
-| HNF4A | UP | NA | 1 |
-| ATF7IP | DOWN | NA | 1 |
-| ERBB2 ⚠️ | DOWN | NA | 2 |
-| EGFR ⚠️ | DOWN | NA | 2 |
-| JPT1 | DOWN | NA | 1 |
-| CALR ⚠️ | DOWN | NA | 2 |
-| RPSA ⚠️ | UP | NA | 2 |
-| ACTB ⚠️ | UP | NA | 2 |
-| IDH1 ⚠️ | DOWN | NA | 2 |
-| MLH1 | DOWN | NA | 1 |
-| EPM2AIP1 | DOWN | NA | 1 |
-| SRPK1 ⚠️ | DOWN | NA | 2 |
-| CAPS | NA | NA | 1 |
-| PRTN3 | NA | NA | 1 |
-| HMGA2 | NA | NA | 1 |
-| S100A8 ⚠️ | NA | NA | 2 |
-| LTF ⚠️ | NA | NA | 3 |
-| CTSD | NA | NA | 1 |
-| STMN1 ⚠️ | NA | NA | 2 |
-| TAGLN | NA | NA | 1 |
-| DES | NA | NA | 1 |
-| CALD1 | NA | NA | 1 |
-| CNN1 | NA | NA | 1 |
-| CDH13 | NA | NA | 1 |
-| PARP9 ⚠️ | NA | NA | 2 |
+| IFIT3* | UP | NA | 2 |
+| PARP9* | UP | NA | 2 |
+| SLC34A2  | UP | NA | 1 |
+| CYB5R1  | UP | NA | 1 |
+| PTPN1  | UP | NA | 1 |
+| DPT* | DOWN | NA | 2 |
+| SLP  | UP | NA | 1 |
+| ANXA2* | UP | NA | 2 |
+| PRDX1  | UP | NA | 1 |
+| CTNNB  | DOWN | NA | 1 |
+| HMGB3  | UP | NA | 1 |
+| CLC1  | DOWN | NA | 1 |
+| EIF4A1* | UP | NA | 2 |
+| PRDX6* | UP | NA | 3 |
+| ENO1* | UP | NA | 3 |
+| ANXA4  | DOWN | NA | 1 |
+| EMD  | UP/DOWN | NA | 1 |
+| KU70  | UP/DOWN | NA | 1 |
+| GRP78  | UP | STAGE1A | 1 |
+| GSTP1  | UP | STAGE2,stage3 | 1 |
+| ACTG* | UP | NA | 2 |
+| DIA3  | DOWN | STAGE2 | 1 |
+| ENOA* | UP/DOWN | NA | 3 |
+| ALBU  | UP | NA | 1 |
+| ACTB* | DOWN | STAGE1B,stage3 | 2 |
+| ACTG* | DOWN | NA | 2 |
+| KRT8  | UP | STAGE3 | 1 |
+| ANXA1* | UP | NA | 2 |
+| ENOA* | UP | STAGE3 | 3 |
+| TRFE  | UP/DOWN | STAGE3 | 1 |
+| HSPB1  | UP/DOWN | NA | 1 |
+| EF-TU  | UP/DOWN | NA | 1 |
+| IDH1* | UP/DOWN | NA | 2 |
+| SOD1  | UP/DOWN | NA | 1 |
+| CALR* | UP/DOWN | NA | 2 |
+| RPSA* | UP/DOWN | NA | 2 |
+| UAP56  | UP/DOWN | NA | 1 |
+| PSME1  | UP | NA | 1 |
+| PDIA3  | UP | NA | 1 |
+| CAH1  | UP/DOWN | NA | 1 |
+| IDHC  | UP/DOWN | NA | 1 |
+| PPIA  | UP/DOWN | NA | 1 |
+| PPIB  | UP/DOWN | NA | 1 |
+| ZNF844  | UP/DOWN | NA | 1 |
+| ALDOA  | UP/DOWN | NA | 1 |
+| ENO1* | UP/DOWN | NA | 3 |
+| KRT10  | UP/DOWN | NA | 1 |
+| ABRACL  | UP/DOWN | NA | 1 |
+| PGAM2  | UP | NA | 1 |
+| FGB  | UP | NA | 1 |
+| ANXA3  | UP | NA | 1 |
+| CTNB1  | UP | NA | 1 |
+| XPO2  | DOWN | NA | 1 |
+| CAPG  | DOWN | NA | 1 |
+| MMP9  | DOWN | NA | 1 |
+| EWSR1  | DOWN | NA | 1 |
+| PKM  | DOWN | NA | 1 |
+| NAMPT  | UP | NA | 1 |
+| ENOA* | UP | NA | 3 |
+| CATD  | UP | NA | 1 |
+| LDHA* | UP | NA | 2 |
+| SPIT1  | UP | NA | 1 |
+| OSTP  | DOWN | NA | 1 |
+| MPO  | DOWN | NA | 1 |
+| CASP3  | DOWN | NA | 1 |
+| CADH1  | UP | NA | 1 |
+| TUBA1A  | UP | POSTMENOPAUSAL | 1 |
+| TIGAR  | UP | POSTMENOPAUSAL | 1 |
+| SEC11A  | UP | POSTMENOPAUSAL | 1 |
+| CENPV  | UP | POSTMENOPAUSAL | 1 |
+| TMSB4X* | UP | POSTMENOPAUSAL | 2 |
+| COL1A2* | UP | POSTMENOPAUSAL | 4 |
+| S100A16* | DOWN | POSTMENOPAUSAL | 2 |
+| NEBL  | DOWN | POSTMENOPAUSAL | 1 |
+| OGN* | DOWN | POSTMENOPAUSAL | 2 |
+| COL1A2* | DOWN | NA | 4 |
+| S100A16* | DOWN | NA | 2 |
+| SLC9A3R1  | UP | NA | 1 |
+| DNAJB11  | UP | NA | 1 |
+| RBBP4  | UP | NA | 1 |
+| MYH11  | UP | NA | 1 |
+| OGN* | UP | NA | 2 |
+| GNLY  | DOWN | NA | 1 |
+| MZB1  | DOWN | GRADE2 | 1 |
+| MX1  | DOWN | NA | 1 |
+| NANS  | DOWN | NA | 1 |
+| TMED9  | UP | NA | 1 |
+| TPPP3  | UP | NA | 1 |
+| HNRNPF  | UP | NA | 1 |
+| NOLC1  | UP | NA | 1 |
+| SLC4A1  | UP | NA | 1 |
+| COL5A1  | DOWN | NA | 1 |
+| FGA  | DOWN | NA | 1 |
+| HBA1  | DOWN | NA | 1 |
+| COL1A2* | DOWN | NA | 4 |
+| SNRPC  | DOWN | Grade3 | 1 |
+| UBE2V2  | UP | Grade3 | 1 |
+| COL1A1  | UP/DOWN | Grade3 | 1 |
+| BCAM  | UP/DOWN | Grade3 | 1 |
+| PTMA  | UP/DOWN | Grade3 | 1 |
+| DEFA1  | UP/DOWN | NA | 1 |
+| S100A8* | UP/DOWN | NA | 2 |
+| LTF* | UP/DOWN | NA | 3 |
+| CAMP  | UP/DOWN | NA | 1 |
+| AZU1  | UP/DOWN | NA | 1 |
+| COL1A2* | UP/DOWN | Grade3 | 4 |
+| SEC63  | UP/DOWN | Grade3 | 1 |
+| LDHB  | UP/DOWN | Grade3 | 1 |
+| ABHD14B  | UP/DOWN | Grade3 | 1 |
+| LTF* | UP/DOWN | Grade3 | 3 |
+| SARS1  | UP/DOWN | Grade3 | 1 |
+| ATP1B1  | UP/DOWN | Grade3 | 1 |
+| IARS1  | UP/DOWN | Grade3 | 1 |
+| PNP  | UP/DOWN | Grade3 | 1 |
+| SFN  | UP/DOWN | Grade3 | 1 |
+| ACTA2  | UP/DOWN | NA | 1 |
+| TPR  | UP/DOWN | NA | 1 |
+| MAP4  | UP | NA | 1 |
+| HBG2  | UP/Down | NA | 1 |
+| PSMD11  | UP/Down | NA | 1 |
+| SLC2A11  | UP/Down | NA | 1 |
+| SLC2A1  | UP/Down | NA | 1 |
+| SRRM2  | UP/DOWN | NA | 1 |
+| U2AF1  | UP/Down | NA | 1 |
+| TMSB4X* | UP/Down | NA | 2 |
+| DVL-2  | UP/Down | NA | 1 |
+| HSP8  | UP/Down | NA | 1 |
+| EIF4G2  | UP | NA | 1 |
+| F13A1  | UP | NA | 1 |
+| GFM1  | UP | NA | 1 |
+| NPEPL1  | UP | NA | 1 |
+| SARS2  | UP | NA | 1 |
+| SNTB1  | LOW | NA | 1 |
+| UBR4  | LOW | NA | 1 |
+| USP47  | LOW | NA | 1 |
+| WDR5  | LOW | NA | 1 |
+| ASS1* | UP | NA | 2 |
+| PFAS  | UP | NA | 1 |
+| ckb  | UP | NA | 1 |
+| hk2  | UP | NA | 1 |
+| MAPKAPK3  | UP | NA | 1 |
+| SERPINA1  | LOW | NA | 1 |
+| TAGLN2* | LOW | NA | 2 |
+| TPI1* | UP/DOWN | NA | 2 |
+| ENO1* | UP/DOWN | NA | 3 |
+| ANXA2* | UP | NA | 2 |
+| ANXA1* | UP | NA | 2 |
+| SRPK1* | DOWN | NA | 2 |
+| PTPN6  | UP | NA | 1 |
+| ATP5A  | UP | NA | 1 |
+| TUBB  | UP | NA | 1 |
+| ERBB2* | UP | NA | 2 |
+| EGFR* | DOWN | NA | 2 |
+| ACTN4  | UP | TYPE 2 | 1 |
+| UBE2N  | UP | TYPE 1 | 1 |
+| PKM2* | UP | NA | 2 |
+| HSPA5  | UP | NA | 1 |
+| LMNAA/C  | UP | NA | 1 |
+| HRNR  | UP | NA | 1 |
+| MDH2  | UP | GRADE1,grade3,stage1,stage3 | 1 |
+| STMN1* | UP | GRADE1,GRADE3 | 2 |
+| CKB  | UP | NA | 1 |
+| DJ-1  | UP | TYPE1 | 1 |
+| PRKCSH  | UP | TYPE1 | 1 |
+| NCL  | UP | TYPE1 | 1 |
+| GON7  | UP | STAGE1A,STAGE1B | 1 |
+| APOA1  | UP | NA | 1 |
+| S100A  | UP | NA | 1 |
+| PKM2* | UP | NA | 2 |
+| HSP10  | UP | NA | 1 |
+| EC1  | UP | type 1 | 1 |
+| EC2  | UP | NA | 1 |
+| PKM1  | UP | NA | 1 |
+| WFDC2  | UP | NA | 1 |
+| CLU  | DOWN | NA | 1 |
+| MUC5B  | UP | NA | 1 |
+| COX2  | UP | NA | 1 |
+| PRDX3  | UP | NA | 1 |
+| PRDX5  | UP | NA | 1 |
+| PRDX6* | UP | NA | 3 |
+| RDX4  | UP | NA | 1 |
+| HNRNPA1  | UP | NA | 1 |
+| CTSB  | UP | stage1B | 1 |
+| CALU  | UP | NA | 1 |
+| CACYBP  | UP | NA | 1 |
+| LDHA* | UP | NA | 2 |
+| P38MAPK  | UP | stage1A | 1 |
+| NFKB  | UP | NA | 1 |
+| ERK1/2  | UP | NA | 1 |
+| PRDX6* | UP | NA | 3 |
+| EIF4A1* | UP | NA | 2 |
+| CLIC1  | DOWN | NA | 1 |
+| CLIC4  | DOWN | NA | 1 |
+| TAGLN2* | UP | NA | 2 |
+| TPI1* | UP | NA | 2 |
+| TPI-1  | UP | NA | 1 |
+| HSPA8  | UP | NA | 1 |
+| ATF2  | UP | NA | 1 |
+| JUN  | UP | NA | 1 |
+| TAF1  | UP | NA | 1 |
+| HNF4A  | UP | NA | 1 |
+| ATF7IP  | DOWN | NA | 1 |
+| ERBB2* | DOWN | NA | 2 |
+| EGFR* | DOWN | NA | 2 |
+| JPT1  | DOWN | NA | 1 |
+| CALR* | DOWN | NA | 2 |
+| RPSA* | UP | NA | 2 |
+| ACTB* | UP | NA | 2 |
+| IDH1* | DOWN | NA | 2 |
+| MLH1  | DOWN | NA | 1 |
+| EPM2AIP1  | DOWN | NA | 1 |
+| SRPK1* | DOWN | NA | 2 |
+| CAPS  | NA | NA | 1 |
+| PRTN3  | NA | NA | 1 |
+| HMGA2  | NA | NA | 1 |
+| S100A8* | NA | NA | 2 |
+| LTF* | NA | NA | 3 |
+| CTSD  | NA | NA | 1 |
+| STMN1* | NA | NA | 2 |
+| TAGLN  | NA | NA | 1 |
+| DES  | NA | NA | 1 |
+| CALD1  | NA | NA | 1 |
+| CNN1  | NA | NA | 1 |
+| CDH13  | NA | NA | 1 |
+| PARP9* | NA | NA | 2 |
+
+*Asterisk indicates duplicate gene entry*

@@ -199,9 +199,13 @@ Each of these combinations maps to one of six Gaussian samplers (strong/weak, up
 ## Citation
 
 If you use SynthProteomics in your research, please cite:
-
-> Arora, N. *SynthProteomics: A Probabilistic Fuzzy Rule-Based Framework for Synthetic Clinical and Proteomics Data Simulation in Endometrial Cancer Research.* (manuscript in preparation).
-
+```
+@software{Neha_Arora_SynthProteomics,
+author = {{Neha Arora}},
+title = {{SynthProteomics}},
+version = {1.0.0}
+}
+```
 ---
 
 ## License

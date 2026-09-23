@@ -26,9 +26,10 @@ tutorial — we'll run everything in Google Colab.
 ## Step 1 — Launch the app
 
 1. Go to [Google Colab](https://colab.research.google.com/) and create a new notebook.
-2. Open this repository's main script (`synthproteomics.py`) and copy its entire
+2. Open this repository's main script (`app.py`) and copy its entire
    contents into the first cell of your Colab notebook.
-3. Run the cell (press `Shift + Enter`, or click the ▶ play button).
+4. Load the dataset provided.
+5. Run the cell (press `Shift + Enter`, or click the ▶ play button).
 
 The first run will take about 30–60 seconds — it's installing `gradio` and
 `scikit-learn` in the background. When it finishes, you'll see output ending in

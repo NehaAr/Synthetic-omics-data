@@ -183,7 +183,3 @@ stated reason rather than tuned to maximize the reported result:
 ---
 
 
-
-*This document was generated from the manuscript text and is intended as
-supplementary repository documentation. It should be kept in sync with the
-manuscript if reported figures change during revision.*

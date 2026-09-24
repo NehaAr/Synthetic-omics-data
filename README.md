@@ -9,6 +9,8 @@
 
 # SynthProteomics
 
+![Alt Text](synthpro.png)
+
 **A probabilistic, fuzzy rule-based framework for synthetic clinical and proteomic data simulation in endometrial cancer research.**
 
 SynthProteomics is a no-code, browser-based tool (built with [Gradio](https://gradio.app)) that generates realistic, fully synthetic clinical profiles and protein abundance data for endometrial cancer. It is designed for bioinformaticians, machine learning researchers, and clinical researchers who need labeled, biologically plausible data without access to real patient cohorts or mass spectrometry facilities.

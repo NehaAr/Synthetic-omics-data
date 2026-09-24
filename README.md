@@ -85,7 +85,7 @@ This will start a local Gradio server (by default at `http://127.0.0.1:7860`). O
 - `matplotlib`
 - `scikit-learn` (only required for the Stage Classifier tab)
 
-> **Note:** the script currently reads the optional HPA file from a hardcoded path (`/content/NOT_new_rna.tsv`), which is a Google Colab convention. If running locally, either create a `/content/` directory with the file in it, or edit the `pd.read_csv(...)` path near the top of the script to point at your own file location.
+> **Note:** the script currently reads the optional HPA file from a hardcoded path (`/content/HPA.tsv`) (provided in data folder), which is a Google Colab convention. If running locally, either create a `/content/` directory with the file in it, or edit the `pd.read_csv(...)` path near the top of the script to point at your own file location.
 
 > **Note:** CSV downloads are written to `/tmp/`, which exists by default on Linux/macOS. Windows users should edit the `download_clinical_csv()` / `download_protein_csv()` functions to use a Windows-compatible temp path (e.g. `tempfile.gettempdir()`).
 
@@ -98,9 +98,9 @@ The tool can incorporate real baseline tissue expression data from the [Human Pr
 To enable it:
 
 1. Go to the Human Protein Atlas and download the normal tissue RNA expression + cancer prognostics export (TSV format) for endometrial tissue.
-2. Rename the file `NOT_new_rna.tsv`.
-3. In Colab: upload it to `/content/NOT_new_rna.tsv` (use the Colab file browser, or `files.upload()`).
-4. In a local install: either place it at `/content/NOT_new_rna.tsv` or edit the file path in the script.
+2. Rename the file `HPA.tsv`.
+3. In Colab: upload it to `/content/HPA.tsv` (use the Colab file browser, or `files.upload()`).
+4. In a local install: either place it at `/content/HPA.tsv` or edit the file path in the script.
 
 The file must contain at least these columns:
 - `Gene`

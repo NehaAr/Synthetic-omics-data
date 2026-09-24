@@ -510,4 +510,4 @@ with gr.Blocks(title="SynthProteomics") as demo:
         btn_rf.click(use_case_1_random_forest, inputs=[], outputs=out_rf)
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(share=True)

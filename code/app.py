@@ -9,8 +9,7 @@ Copyright (c) 2026 Neha Arora — MIT License
 GitHub: https://github.com/NehaAr/Synthetic-omics-data
 """
 import subprocess, sys
-subprocess.run([sys.executable, "-m", "pip", "install", "gradio", "--quiet"], check=False)
-subprocess.run([sys.executable, "-m", "pip", "install", "scikit-learn", "--quiet"], check=False)
+subprocess.run([sys.executable, "-m", "pip", "install", "gradio", "scikit-learn", "pandas", "numpy", "matplotlib", "--quiet"], check=False)
 
 import ast
 import re
@@ -23,9 +22,6 @@ import random
 
 # ══════════════════════════════════════════════════════════════════════
 # LITERATURE-COMPILED PROTEIN REGULATION DATABASE
-#
-# Columns: Gene, Regulation (UP/DOWN/UP/DOWN/LOW), Factor (stage/grade/
-#          menopausal status specificity; NA = general)
 # ══════════════════════════════════════════════════════════════════════
 protein_abundance_dictionary = {
     "Gene": [
@@ -85,7 +81,6 @@ protein_abundance_dictionary = {
         'Grade3','Grade3','NA','NA','NA','NA','NA','Grade3','Grade3','Grade3','Grade3',
         'Grade3','Grade3','Grade3','Grade3','Grade3','Grade3','NA','NA','NA','NA','NA',
         'NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA',
-        'NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA','NA',
         'NA','NA','NA','NA','NA','NA','TYPE 2','TYPE 1','NA','NA','NA','NA',
         'GRADE1,grade3,stage1,stage3','GRADE1,GRADE3','NA','TYPE1','TYPE1','TYPE1',
         'STAGE1A,STAGE1B','NA','NA','NA','NA','type 1','NA','NA','NA','NA','NA','NA',
@@ -95,432 +90,264 @@ protein_abundance_dictionary = {
     ]
 }
 
+# Annotated Pathways dictionary for Section 2.2 covariance blending
+PATHWAY_MAP = {
+    # Original Pathways
+    'PI3K_AKT': ['CTNNB', 'EGFR', 'ERBB2', 'PKM2', 'MMP9', 'NFKB', 'PTEN'],
+    'APOPTOSIS': ['CASP3', 'HMGB3', 'PRDX1', 'PRDX6', 'SOD1'],
+    'GLYCOLYSIS': ['ENO1', 'ALDOA', 'LDHA', 'PKM', 'TPI1', 'PGAM2'],
+    
+    # Structural & Hormonal Pathways
+    'WNT_BETA_CATENIN': ['CTNNB1', 'APC', 'AXIN1', 'GSK3B'],
+    'MAPK_ERK': ['KRAS', 'BRAF', 'MAPK1', 'EGFR', 'ERBB2'],
+    'DNA_REPAIR': ['MLH1', 'MSH2', 'MSH6', 'PMS2', 'POLE', 'TP53'],
+    
+    # Genomic & Microenvironment Pathways
+    'CHROMATIN_REMODELING': ['ARID1A', 'SMARCA4', 'ARID1B'],
+    'TGF_BETA_EMT': ['TGFB1', 'SMAD2', 'SMAD3', 'SMAD4'],
+    'ANGIOGENESIS': ['VEGFA', 'KDR', 'HIF1A', 'ANGPT2']
+}
+
 # ══════════════════════════════════════════════════════════════════════
 # GLOBAL STATE
-# CHANGE: clinical_data initialised as DataFrame not list (BUG FIX 6)
 # ══════════════════════════════════════════════════════════════════════
-clinical_data   = pd.DataFrame()
-protein_data    = []
+clinical_data = pd.DataFrame()
+protein_data = pd.DataFrame()
 
-dataset_url = "https://raw.githubusercontent.com/NehaAr/Synthetic-omics-data/main/data/HPA.tsv"
 try:
-    normal_tissue_expression = pd.read_csv(dataset_url, sep='\t')
-
+    normal_tissue_expression = pd.read_csv('/content/HPA.tsv', sep='\t')
     normal_tissue_prognostic = (
-        normal_tissue_expression[
-            'Cancer prognostics - Uterine Corpus Endometrial Carcinoma (TCGA)'
-        ]
-        .astype(str)
-        .str.strip()
-        .str.replace(r'[^\d.]', '', regex=True)   # remove non-numeric chars cleanly
+        normal_tissue_expression['Cancer prognostics - Uterine Corpus Endometrial Carcinoma (TCGA)']
+        .astype(str).str.strip().str.replace(r'[^\d.]', '', regex=True)
     )
     normal_tissue_prognostic = pd.to_numeric(normal_tissue_prognostic, errors='coerce').astype(float)
-
-    # TPM-based expression classification (matches paper Section 2.2)
-    normal_tisue_regulation = normal_tissue_expression[
-        'Tissue RNA - endometrium 1 [nTPM]'
-    ].apply(lambda x: "up" if x > 100 else ("moderate" if 10 <= x <= 100 else "down"))
-
-    # Prognostic significance: p≤0.05 = statistically prognostic
+    normal_tisue_regulation = normal_tissue_expression['Tissue RNA - endometrium 1 [nTPM]'].apply(
+        lambda x: "up" if x > 100 else ("moderate" if 10 <= x <= 100 else "down")
+    )
     gene_prognosis_indicator = normal_tissue_prognostic.apply(
         lambda x: "yes" if pd.notna(x) and x <= 0.05 else "no"
     )
     gene_list_lower = normal_tissue_expression['Gene'].str.lower().tolist()
-
 except FileNotFoundError:
-    print("WARNING: HPA TSV not found. Upload NOT_new_rna.tsv to /content/")
     normal_tissue_expression = pd.DataFrame(columns=['Gene'])
-    normal_tisue_regulation  = pd.Series(dtype=str)
+    normal_tisue_regulation = pd.Series(dtype=str)
     gene_prognosis_indicator = pd.Series(dtype=str)
-    gene_list_lower          = []
-
+    gene_list_lower = []
 
 # ══════════════════════════════════════════════════════════════════════
-# HELPER FUNCTIONS
+# HELPER FUNCTIONS & MAMDANI FUZZY ENGINE
 # ══════════════════════════════════════════════════════════════════════
+
+def compute_mamdani_scale(grade_str, stage_str):
+    """
+    Section 2.2 Mamdani Fuzzy Inference Engine:
+    Maps Grade (1-3) and FIGO Stage index (1-10) to a scale factor kappa in [0.5, 1.5].
+    """
+    g_val = 1.0 if '1' in str(grade_str) else (2.0 if '2' in str(grade_str) else 3.0)
+    stage_map = {'Stage1':1, 'Stage1A':1, 'Stage1B':2, 'Stage2':3, 'Stage2A':3, 'Stage2B':4, 
+                 'Stage3C1':6, 'Stage3C2':7, 'Stage4A':9, 'Stage4B':10}
+    s_val = float(stage_map.get(str(stage_str), 5))
+
+    # Normalized inputs
+    g_norm = (g_val - 1.0) / 2.0  # [0, 1]
+    s_norm = (s_val - 1.0) / 9.0  # [0, 1]
+
+    # Membership degrees
+    g_high = g_norm
+    g_low = 1.0 - g_norm
+    s_high = s_norm
+    s_low = 1.0 - s_norm
+
+    # Rules
+    r_high = min(g_high, s_high)
+    r_low = min(g_low, s_low)
+    r_med = 1.0 - max(r_high, r_low)
+
+    # Defuzzification via Centroid
+    kappa = (r_low * 0.7 + r_med * 1.0 + r_high * 1.3) / (r_low + r_med + r_high + 1e-6)
+    return float(np.clip(kappa, 0.5, 1.5))
 
 def parse_factors(factor_string):
-    """
-    Parse Factor field which uses mixed ',' and '/' delimiters.
-    BUG FIX 1: original code used non-existent .splt() method.
-    Now uses re.split() to correctly tokenise entries like
-    'STAGE1A,STAGE1B' or 'GRADE1,grade3,stage1,stage3'.
-    """
-    if not factor_string or factor_string.upper() == "NA":
+    if not factor_string or str(factor_string).upper() == "NA":
         return []
     parts = re.split(r'[/,]', factor_string)
     return [p.strip().lower() for p in parts if p.strip()]
 
-
-def factor_matches_patient(factor_string, stage_arr, grade_arr, menopause_arr):
-    """
-    Check whether a protein's factor condition matches the current patient cohort.
-    This implements the 'fuzzy rule-based layer' described in paper Section 2.2 —
-    clinical parameters (stage/grade/menopausal status) gating proteomic perturbation.
-
-    BUG FIX 4: original code used + operator on numpy arrays which concatenates
-    as matrix not list. Now uses np.concatenate() correctly.
-    """
+def factor_matches_patient(factor_string, stage, grade, menopause):
     factors = parse_factors(factor_string)
     if not factors:
         return False
-    all_values = [
-        str(v).lower()
-        for v in np.concatenate([
-            np.asarray(stage_arr).flatten(),
-            np.asarray(grade_arr).flatten(),
-            np.asarray(menopause_arr).flatten()
-        ])
-    ]
-    return any(f in all_values for f in factors)
+    patient_vals = [str(stage).lower(), str(grade).lower(), str(menopause).lower()]
+    return any(f in patient_vals for f in factors)
 
-
-# ── Gaussian abundance samplers ───────────────────────────────────────
-# log2FC ranges per paper: strong signal ±2 to ±3, weak ±1 to ±2
-# These correspond to the fuzzy output membership functions:
-#   prognostic=YES  → strong perturbation (loc=±2, scale=0.4)
-#   prognostic=NO   → weak perturbation   (loc=±1, scale=0.3)
-#   neutral/unknown → baseline noise      (loc=0,  scale=0.5)
-
-def sample_up_strong():
-    """Upregulated, prognostically significant — log2FC ~2"""
-    return float(np.clip(np.random.normal(loc=2.0, scale=0.4), 0.0, 3.0))
-
-def sample_up_weak():
-    """Upregulated, not prognostically significant — log2FC ~1"""
-    return float(np.clip(np.random.normal(loc=1.0, scale=0.3), 0.0, 3.0))
-
-def sample_down_strong():
-    """Downregulated, prognostically significant — log2FC ~ -2"""
-    return float(np.clip(np.random.normal(loc=-2.0, scale=0.4), -3.0, 0.0))
-
-def sample_down_weak():
-    """Downregulated, not prognostically significant — log2FC ~ -1"""
-    return float(np.clip(np.random.normal(loc=-1.0, scale=0.3), -3.0, 0.0))
-
-def sample_low():
-    """
-    LOW regulation — mild downregulation distinct from full DOWN.
-    NEW: original code had no handler for 'LOW' regulation values
-    that appear in the dictionary (e.g. SLC2A1, SLC2A11).
-    """
-    return float(np.clip(np.random.normal(loc=-0.5, scale=0.3), -1.5, 0.0))
-
-def sample_neutral():
-    """No clear direction or factor not matched — near-zero noise"""
-    return float(np.clip(np.random.normal(loc=0.0, scale=0.5), -1.5, 1.5))
-
+def sample_up_strong(): return float(np.clip(np.random.normal(loc=2.0, scale=0.4), 0.0, 3.0))
+def sample_up_weak(): return float(np.clip(np.random.normal(loc=1.0, scale=0.3), 0.0, 3.0))
+def sample_down_strong(): return float(np.clip(np.random.normal(loc=-2.0, scale=0.4), -3.0, 0.0))
+def sample_down_weak(): return float(np.clip(np.random.normal(loc=-1.0, scale=0.3), -3.0, 0.0))
+def sample_low(): return float(np.clip(np.random.normal(loc=-0.5, scale=0.3), -1.5, 0.0))
+def sample_neutral(): return float(np.clip(np.random.normal(loc=0.0, scale=0.5), -1.5, 1.5))
 
 def assign_abundance(regulation, normal_reg, prognostic):
-    """
-    Core Mamdani-inspired assignment: maps fuzzy linguistic inputs
-    (regulation direction × prognostic significance × baseline expression)
-    to a Gaussian-sampled log2FC output value.
-
-    This is the central 'fuzzy rule-based layer' referenced in paper Section 2.2.
-    Linguistic variables:
-      - regulation:  UP | DOWN | UP/DOWN | LOW
-      - normal_reg:  up | down | moderate  (from HPA nTPM)
-      - prognostic:  yes | no             (from TCGA p-value)
-    """
-    reg  = regulation.lower().strip()
-    prog = str(prognostic).lower().strip()
-
+    reg, prog = str(regulation).lower().strip(), str(prognostic).lower().strip()
     if reg == 'up':
         return sample_up_strong() if prog == 'yes' else sample_up_weak()
-
     elif reg == 'down':
         return sample_down_strong() if prog == 'yes' else sample_down_weak()
-
-    elif 'up' in reg and 'down' in reg:  # catches UP/DOWN and UP/Down
-        if normal_reg == 'up':
-            return sample_up_strong()  if prog == 'yes' else sample_up_weak()
-        elif normal_reg == 'down':
-            return sample_down_strong() if prog == 'yes' else sample_down_weak()
-        else:
-            return sample_neutral()
-
+    elif 'up' in reg and 'down' in reg:
+        if normal_reg == 'up': return sample_up_strong() if prog == 'yes' else sample_up_weak()
+        elif normal_reg == 'down': return sample_down_strong() if prog == 'yes' else sample_down_weak()
+        else: return sample_neutral()
     elif reg == 'low':
-        # BUG FIX 7: LOW was previously unhandled → fell through to neutral
         return sample_low()
-
     else:
         return sample_neutral()
 
+# ══════════════════════════════════════════════════════════════════════
+# DATA GENERATION PIPELINES
+# ══════════════════════════════════════════════════════════════════════
 
-def generate_person_data(num_records, selected_columns,
-                         subtype_filter="All", stage_filter="All"):
-    """
-    Generates synthetic clinical profiles for endometrial cancer patients.
-
-    Rules encoded (per FIGO staging and published epidemiology):
-    - Age ≤ 51        → pre-menopausal (Menopause=1)
-    - Age > 51        → post-menopausal (Menopause=2)
-    - Age ≤ 35        → 50/50 nulliparity
-    - Age > 35        → 60% nulliparity (higher parity with age)
-    - Age ≥ 60 + nulliparous + BMI ≥ 25 → high-risk: 60% Type2 tumour
-    - Type1 tumour    → Grade1 more probable (50/30/20)
-    - Type2 tumour    → Grade3 more probable (20/30/50)
-    - Grade1/2        → early stage weights (Stage1-2 more probable)
-    - Grade3          → late stage weights  (Stage3-4 more probable)
-    """
+def generate_person_data(num_records, selected_columns, subtype_filter="All", stage_filter="All"):
     global clinical_data
     num_records = int(num_records)
-
     np.random.seed(42)
     random.seed(42)
 
-    # ── Age: Normal distribution, clipped to 30–85 ───────────────────
-    Ages = np.clip(
-        np.random.normal(loc=60, scale=15, size=num_records).astype(int),
-        30, 85
-    )
+    Ages = np.clip(np.random.normal(loc=60, scale=15, size=num_records).astype(int), 30, 85)
+    bmi_values = np.round(np.clip(np.random.normal(loc=25, scale=4, size=num_records), 21, 40), 2)
+    ethnicities = random.choices(['European','East Asian','South Asian','Middle Eastern','African','Indigenous Australian','Other'],
+                                 weights=[0.55, 0.15, 0.10, 0.05, 0.03, 0.03, 0.09], k=num_records)
+    
+    patient_id, Treatment, Menopause, Grade, Stage, Myometrial_invasion = [], [], [], [], [], []
+    Nulliparity, Tumor_type, Subtype, Survival_outcome = [], [], [], []
 
-    # ── BMI: Normal distribution, clipped to 21–40 ───────────────────
-    bmi_values = np.round(
-        np.clip(np.random.normal(loc=25, scale=4, size=num_records), 21, 40),
-        2
-    )
-
-   
-    ethnicities = random.choices(
-    ['European','East Asian','South Asian','Middle Eastern',
-     'African','Indigenous Australian','Other'],
-    weights=[0.55, 0.15, 0.10, 0.05, 0.03, 0.03, 0.09],
-    k=num_records
-     )
-    patient_id, Treatment, Menopause = [], [], []
-    Grade, Stage, Myometrial_invasion = [], [], []
-    Nulliparity, Tumor_type, Subtype  = [], [], []
-    Survival_outcome = []  # Added per paper Section 2.1
+    stage_choices = ['Stage1','Stage1A','Stage1B','Stage2','Stage2A','Stage2B','Stage3C1','Stage3C2','Stage4A','Stage4B']
+    early_weights = [0.1333]*6 + [0.05]*4
+    late_weights = [0.05]*6 + [0.1333]*4
 
     for i in range(num_records):
         patient_id.append(f"EC{i:04d}")
-        Treatment.append(random.choice(["Surgery", "Chemotherapy",
-                                        "Radiotherapy", "Combined"]))
-        # Myometrial invasion: 2–40mm range (normal ≤5mm; >50% = Stage IB)
+        Treatment.append(random.choice(["Surgery", "Chemotherapy", "Radiotherapy", "Combined"]))
         Myometrial_invasion.append(round(random.uniform(2, 40), 2))
+        Menopause.append(1 if Ages[i] <= 51 else 2)
+        Nulliparity.append(random.choices(["yes", "no"], [0.5, 0.5] if Ages[i] <= 35 else [0.6, 0.4])[0])
 
-    # ── Menopause: clinical threshold age 51 ─────────────────────────
-    for age in Ages:
-        Menopause.append(1 if age <= 51 else 2)  # 1=pre, 2=post
+        high_risk = (Ages[i] >= 60 and Nulliparity[i] == 'yes' and bmi_values[i] >= 25)
+        t_type = random.choices(['Type1','Type2'], [0.4, 0.6] if high_risk else [0.8, 0.2])[0]
+        Tumor_type.append(t_type)
 
-    # ── Nulliparity: probability increases with age ───────────────────
-    for age in Ages:
-        if age <= 35:
-            Nulliparity.extend(random.choices(["yes", "no"], [0.5, 0.5], k=1))
+        if t_type == 'Type1':
+            g_val = random.choices(['Grade1','Grade2','Grade3'], [0.5, 0.3, 0.2])[0]
+            sub = random.choices(['Endometrioid','Mucinous'], [0.90, 0.10])[0]
         else:
-            Nulliparity.extend(random.choices(["yes", "no"], [0.6, 0.4], k=1))
+            g_val = random.choices(['Grade1','Grade2','Grade3'], [0.2, 0.3, 0.5])[0]
+            sub = random.choices(['Serous','Clear Cell','Undifferentiated'], [0.55, 0.35, 0.10])[0]
+        
+        Grade.append(g_val)
+        Subtype.append(sub)
 
-    # ── Stage choices (FIGO system) ───────────────────────────────────
-    stage_choices = [
-        'Stage1','Stage1A','Stage1B',       # confined to uterus
-        'Stage2','Stage2A','Stage2B',       # cervical spread
-        'Stage3C1','Stage3C2',              # lymph node involvement
-        'Stage4A','Stage4B'                 # distant metastasis
-    ]
-    early_weights = [0.1333]*6 + [0.05]*4   # Grade1/2: stages 1-2 more likely
-    late_weights  = [0.05]*6   + [0.1333]*4 # Grade3: stages 3-4 more likely
+        s_val = random.choices(stage_choices, weights=early_weights if g_val in ('Grade1', 'Grade2') else late_weights)[0]
+        Stage.append(s_val)
 
-    # ── Histological subtype per paper Section 1 ─────────────────────
-    # Endometrioid: 70-80%; serous/clear cell: rare
-    subtype_map = {
-        'Type1': random.choices(
-            ['Endometrioid','Mucinous'], [0.90, 0.10], k=1
-        )[0],
-        'Type2': random.choices(
-            ['Serous','Clear Cell','Undifferentiated'], [0.55, 0.35, 0.10], k=1
-        )[0]
-    }
-
-    for idx, age in enumerate(Ages):
-        # ── Core probabilistic rules ──────────────────────────────────
-        # Rule 1: High-risk profile → elevated Type2 probability
-        high_risk = (age >= 60 and
-                     Nulliparity[idx] == 'yes' and
-                     bmi_values[idx] >= 25)
-
-        if high_risk:
-            Tumor_type.extend(random.choices(['Type1','Type2'], [0.4, 0.6], k=1))
+        if s_val.startswith('Stage1') and g_val == 'Grade1':
+            Survival_outcome.append(random.choices(['Alive','Deceased'], [0.90, 0.10])[0])
+        elif s_val.startswith('Stage4'):
+            Survival_outcome.append(random.choices(['Alive','Deceased'], [0.30, 0.70])[0])
         else:
-            Tumor_type.extend(random.choices(['Type1','Type2'], [0.8, 0.2], k=1))
-
-        # Rule 2: Tumor type → Grade distribution
-        if Tumor_type[idx] == 'Type1':
-            Grade.extend(random.choices(
-                ['Grade1','Grade2','Grade3'], [0.5, 0.3, 0.2], k=1))
-            Subtype.append(random.choices(
-                ['Endometrioid','Mucinous'], [0.90, 0.10], k=1)[0])
-        else:
-            Grade.extend(random.choices(
-                ['Grade1','Grade2','Grade3'], [0.2, 0.3, 0.5], k=1))
-            Subtype.append(random.choices(
-                ['Serous','Clear Cell','Undifferentiated'], [0.55, 0.35, 0.10], k=1)[0])
-
-        # Rule 3: Grade → Stage weights
-        # BUG FIX 2: was Grade[idx]=='Type1' — wrong type comparison
-        if Grade[idx] in ('Grade1', 'Grade2'):
-            Stage.extend(random.choices(stage_choices, weights=early_weights, k=1))
-        else:
-            Stage.extend(random.choices(stage_choices, weights=late_weights, k=1))
-
-        # Rule 4: Stage and grade influence survival outcome
-        # (added per paper Section 2.1 — survival outcome is a primary variable)
-        if Stage[idx] in ('Stage1','Stage1A','Stage1B') and Grade[idx] == 'Grade1':
-            Survival_outcome.append(random.choices(['Alive','Deceased'], [0.90, 0.10], k=1)[0])
-        elif Stage[idx] in ('Stage4A','Stage4B'):
-            Survival_outcome.append(random.choices(['Alive','Deceased'], [0.30, 0.70], k=1)[0])
-        else:
-            Survival_outcome.append(random.choices(['Alive','Deceased'], [0.65, 0.35], k=1)[0])
+            Survival_outcome.append(random.choices(['Alive','Deceased'], [0.65, 0.35])[0])
 
     clinical_data = pd.DataFrame({
-        'Patient_ID':       patient_id,
-        'Ages':             Ages,
-        'Ethnicity':        ethnicities,      # ADDED: per paper Section 2.1
-        'Menopause':        Menopause,
-        'Grade':            Grade,
-        'Tumor_type':       Tumor_type,
-        'Histological_Subtype': Subtype,      # ADDED: per paper Section 2.1
-        'Stage':            Stage,
-        'Nulliparity':      Nulliparity,
-        'BMI':              bmi_values,
-        'Myometrial_mm':    Myometrial_invasion,
-        'Treatment':        Treatment,
-        'Survival_Outcome': Survival_outcome  # ADDED: per paper Section 2.1
+        'Patient_ID': patient_id, 'Ages': Ages, 'Ethnicity': ethnicities, 'Menopause': Menopause,
+        'Grade': Grade, 'Tumor_type': Tumor_type, 'Histological_Subtype': Subtype, 'Stage': Stage,
+        'Nulliparity': Nulliparity, 'BMI': bmi_values, 'Myometrial_mm': Myometrial_invasion,
+        'Treatment': Treatment, 'Survival_Outcome': Survival_outcome
     })
 
-    # ── Subtype filter (per paper Section 2.3 — user specifies subtype) ──
     if subtype_filter != "All":
-        clinical_data = clinical_data[
-            clinical_data['Histological_Subtype'] == subtype_filter
-        ].reset_index(drop=True)
-
-    # ── Stage filter (per paper Section 2.3 — user specifies stage) ──
+        clinical_data = clinical_data[clinical_data['Histological_Subtype'] == subtype_filter].reset_index(drop=True)
     if stage_filter != "All":
-        clinical_data = clinical_data[
-            clinical_data['Stage'].str.startswith(stage_filter)
-        ].reset_index(drop=True)
+        clinical_data = clinical_data[clinical_data['Stage'].str.startswith(stage_filter)].reset_index(drop=True)
 
     clinical_data.to_csv('clinical_data.csv', index=False)
-
     valid_cols = [c for c in selected_columns if c in clinical_data.columns]
     return clinical_data[valid_cols] if valid_cols else clinical_data
 
 
-
-def generate_protein_abundance_data(num_records, protein_list):
+def generate_protein_abundance_data(num_records, protein_list, rho=0.4):
     """
-    Generates log2 fold-change protein abundance values per patient.
-
-    Output range: [-3, 3] — consistent with published proteomic studies
-    as stated in paper comments and Section 2.2.
-
-    For each protein × patient, the fuzzy rule-based layer determines
-    abundance by evaluating:
-      1. Regulation direction (UP/DOWN/UP/DOWN/LOW) from literature
-      2. Prognostic significance (p≤0.05) from HPA/TCGA
-      3. Baseline expression level (nTPM) from HPA
-      4. Stage/grade/menopausal factor specificity from literature
+    Algorithm 1: Fuzzy-Rule & Pathway Covariance Blended Simulation
     """
+    global protein_data, clinical_data
+    num_records = int(num_records)
+    if clinical_data.empty or len(clinical_data) < num_records:
+        generate_person_data(num_records, ["Patient_ID", "Stage", "Grade", "Menopause"])
+
     all_outputs = []
-    num_records  = int(num_records)
-
-    stage_arr    = clinical_data['Stage'].unique()    if not clinical_data.empty else []
-    grade_arr    = clinical_data['Grade'].unique()    if not clinical_data.empty else []
-    menopause_arr= clinical_data['Menopause'].unique() if not clinical_data.empty else []
+    gene_dict_lower = [g.lower() for g in protein_abundance_dictionary['Gene']]
 
     for j in range(num_records):
-        # BUG FIX 8: initialise fresh dict per patient — original was global
-        generate_abundance = {}
+        patient_row = clinical_data.iloc[j] if j < len(clinical_data) else clinical_data.iloc[0]
+        p_stage, p_grade, p_meno = patient_row['Stage'], patient_row['Grade'], patient_row['Menopause']
+        
+        # Step 1: Calculate Mamdani Fuzzy Scale Factor kappa
+        kappa = compute_mamdani_scale(p_grade, p_stage)
+        
+        # Step 2: Draw pathway latent factors z_k ~ N(0, 1)
+        pathway_z = {pw: np.random.normal(0, 1) for pw in PATHWAY_MAP}
 
-        for i in protein_list:
-            protein_lower = i.strip().lower()
+        patient_abundances = {}
+        for prot in protein_list:
+            prot_clean = prot.strip()
+            prot_lower = prot_clean.lower()
 
-            # ── Index lookup ──────────────────────────────────────────
-            try:
-                index_protein = [g.lower() for g in
-                                 protein_abundance_dictionary['Gene']].index(protein_lower)
-            except ValueError:
-                index_protein = None
+            idx_prot = gene_dict_lower.index(prot_lower) if prot_lower in gene_dict_lower else None
+            idx_norm = gene_list_lower.index(prot_lower) if prot_lower in gene_list_lower else None
 
-            try:
-                index_normal = gene_list_lower.index(protein_lower)
-            except ValueError:
-                index_normal = None
+            reg = protein_abundance_dictionary['Regulation'][idx_prot] if idx_prot is not None else "UP/DOWN"
+            factor_str = protein_abundance_dictionary['Factor'][idx_prot] if idx_prot is not None else "NA"
+            norm_reg = normal_tisue_regulation.iloc[idx_norm] if idx_norm is not None else "moderate"
+            prog = gene_prognosis_indicator.iloc[idx_norm] if idx_norm is not None else "no"
 
-            regulation   = protein_abundance_dictionary['Regulation'][index_protein] \
-                           if index_protein is not None else None
-            factor_str   = protein_abundance_dictionary['Factor'][index_protein] \
-                           if index_protein is not None else "NA"
-            normal_reg   = normal_tisue_regulation.iloc[index_normal] \
-                           if index_normal is not None else "moderate"
-         
-            prognostic   = gene_prognosis_indicator.iloc[index_normal] \
-                           if index_normal is not None else "no"
+            factor_matched = (factor_str == "NA") or factor_matches_patient(factor_str, p_stage, p_grade, p_meno)
+            base_log2fc = assign_abundance(reg, norm_reg, prog) if factor_matched else sample_neutral()
 
-            factor_is_na    = (factor_str == "NA")
-            factor_matched  = (not factor_is_na and
-                               factor_matches_patient(
-                                   factor_str, stage_arr, grade_arr, menopause_arr))
-
-         
-            if (index_protein is not None and index_normal is not None
-                    and factor_is_na):
-                generate_abundance[i] = assign_abundance(
-                    regulation, normal_reg, prognostic)
-
-      
-            elif index_protein is None and index_normal is not None:
-                inferred_reg = ("up"   if normal_reg == "up"   else
-                               "down"  if normal_reg == "down" else "up/down")
-                generate_abundance[i] = assign_abundance(
-                    inferred_reg, normal_reg, prognostic)
-
-         
-            elif (index_protein is not None and index_normal is None
-                      and factor_is_na):
-                generate_abundance[i] = assign_abundance(
-                    regulation, "moderate", "no")
-
-         
-            elif (index_protein is not None and index_normal is None
-                      and not factor_is_na):
-                if factor_matched:
-                    generate_abundance[i] = assign_abundance(
-                        regulation, "moderate", "no")
-                else:
-                    generate_abundance[i] = sample_neutral()
-
-         
-            elif index_protein is None and index_normal is None:
-                generate_abundance[i] = sample_neutral()
-
-          
-            elif (index_protein is not None and index_normal is not None
-                      and not factor_is_na):
-                if factor_matched:
-                    generate_abundance[i] = assign_abundance(
-                        regulation, normal_reg, prognostic)
-                else:
-                    generate_abundance[i] = sample_neutral()
-
+            # Step 3: Pathway Covariance Blending
+            shared_pw = [pw for pw, genes in PATHWAY_MAP.items() if prot_clean in genes]
+            if shared_pw:
+                z_k = pathway_z[shared_pw[0]]
+                epsilon = np.random.normal(0, 1)
+                final_log2fc = base_log2fc + (rho * z_k + np.sqrt(1.0 - rho**2) * epsilon)
             else:
-                generate_abundance[i] = sample_neutral()
+                final_log2fc = base_log2fc
 
-        all_outputs.append((f"Patient{j:04d}", generate_abundance.copy()))
+            # Step 4: Scale by kappa and clip to [-3, 3]
+            patient_abundances[prot_clean] = float(np.clip(kappa * final_log2fc, -3.0, 3.0))
 
+        all_outputs.append((f"Patient{j:04d}", patient_abundances))
+
+    # Update global dataframe
+    rows = []
+    for pid, ab in all_outputs:
+        r = {'Patient_ID': pid}
+        r.update(ab)
+        rows.append(r)
+    protein_data = pd.DataFrame(rows)
     return all_outputs
-
 
 
 def use_case_1_random_forest():
     """
-    Demonstrates Use Case 1 from paper Section 3:
-    Train a Random Forest classifier on synthetic clinical data
-    to predict early vs late stage endometrial cancer.
+    Section 3 Use Case 1: Random Forest Classifier (Early vs Late Stage)
+    Joint multi-modal classification combining clinical and proteomic features.
     """
+    global clinical_data, protein_data
     if clinical_data.empty:
-        return "Please generate clinical data first (Clinical Data tab)."
+        generate_person_data(1000, ["Patient_ID","Ages","Ethnicity","Menopause","Grade",
+                                   "Tumor_type","Histological_Subtype","Stage","Nulliparity",
+                                   "BMI","Myometrial_mm","Treatment","Survival_Outcome"])
+
+    default_panel = ['CTNNB', 'EGFR', 'ERBB2', 'PKM2', 'MMP9', 'CASP3', 'HMGB3', 'PRDX1', 'PTEN', 'TP53']
+    if protein_data.empty or len(protein_data) != len(clinical_data):
+        generate_protein_abundance_data(len(clinical_data), default_panel)
 
     try:
         from sklearn.ensemble import RandomForestClassifier
@@ -528,115 +355,96 @@ def use_case_1_random_forest():
         from sklearn.preprocessing import LabelEncoder
         from sklearn.metrics import accuracy_score, classification_report
 
-        df = clinical_data.copy()
-
-        # Binary target: early (Stage1/2) vs late (Stage3/4)
-        df['Stage_binary'] = df['Stage'].apply(
-            lambda x: 0 if x.startswith(('Stage1','Stage2')) else 1
+        df_clin = clinical_data.copy().reset_index(drop=True)
+        df_prot = protein_data.copy().reset_index(drop=True)
+        
+        # Target: Early (Stage 1/2) vs Late (Stage 3/4)
+        df_clin['Stage_binary'] = df_clin['Stage'].apply(
+            lambda x: 0 if str(x).startswith(('Stage1', 'Stage2')) else 1
         )
 
-        # Encode categorical features
+        # Categorical Encoding
         le = LabelEncoder()
-        features = ['Ages','BMI','Menopause','Nulliparity','Tumor_type','Grade']
-        X = df[features].copy()
-        for col in ['Nulliparity','Tumor_type','Grade']:
-            X[col] = le.fit_transform(X[col].astype(str))
+        cat_cols = ['Ethnicity', 'Menopause', 'Grade', 'Tumor_type', 'Histological_Subtype', 'Nulliparity', 'Treatment', 'Survival_Outcome']
+        for col in cat_cols:
+            if col in df_clin.columns:
+                df_clin[col] = le.fit_transform(df_clin[col].astype(str))
 
-        y = df['Stage_binary']
+        # Merge Clinical + Proteomic Features
+        feature_cols_clin = ['Ages', 'Ethnicity', 'Menopause', 'Grade', 'Tumor_type', 'Histological_Subtype', 
+                             'Nulliparity', 'BMI', 'Myometrial_mm', 'Treatment', 'Survival_Outcome']
+        
+        X_clin = df_clin[[c for c in feature_cols_clin if c in df_clin.columns]]
+        X_prot = df_prot.drop(columns=['Patient_ID'], errors='ignore')
+        
+        X = pd.concat([X_clin, X_prot], axis=1)
+        y = df_clin['Stage_binary']
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
         clf = RandomForestClassifier(n_estimators=100, random_state=42)
         clf.fit(X_train, y_train)
         y_pred = clf.predict(X_test)
+        
         acc = accuracy_score(y_test, y_pred)
+        report = classification_report(y_test, y_pred, target_names=['Early Stage (I/II)', 'Late Stage (III/IV)'])
+        
+        return f"Random Forest Classification Accuracy: {acc*100:.1f}%\n\nClassification Report:\n{report}"
 
-        report = classification_report(y_test, y_pred,
-                                       target_names=['Early Stage','Late Stage'])
-        result = f"Accuracy: {acc*100:.1f}%\n\n{report}"
-        return result
-
-    except ImportError:
-        return "scikit-learn not installed. Run: pip install scikit-learn"
     except Exception as e:
-        return f"Error: {str(e)}"
+        return f"Error executing classifier: {str(e)}"
 
 
 def wrapper(num_records, text_input):
     try:
         lst = ast.literal_eval(text_input)
-        if isinstance(lst, str):   lst = [lst]
-        if isinstance(lst, tuple): lst = list(lst)
+        if isinstance(lst, (str, tuple)): lst = list(lst) if isinstance(lst, tuple) else [lst]
         if not isinstance(lst, list): lst = [lst]
     except Exception:
         lst = [x.strip() for x in text_input.split(",") if x.strip()]
     return generate_protein_abundance_data(num_records, protein_list=lst)
 
-
-
 def download_clinical_csv():
-    """Export synthetic clinical data as downloadable CSV."""
-    if clinical_data.empty:
-        return None
+    if clinical_data.empty: return None
     path = "/tmp/SynthProteomics_clinical.csv"
     clinical_data.to_csv(path, index=False)
     return path
 
-
 def download_protein_csv(num_records, text_input):
-    """Export synthetic protein abundance data as downloadable CSV."""
     results = wrapper(num_records, text_input)
-    if not results:
-        return None
-    rows = []
-    for patient_id, abundances in results:
-        row = {'Patient_ID': patient_id}
-        row.update(abundances)
-        rows.append(row)
-    df_out = pd.DataFrame(rows)
+    if not results: return None
     path = "/tmp/SynthProteomics_protein.csv"
-    df_out.to_csv(path, index=False)
+    protein_data.to_csv(path, index=False)
     return path
-
-
 
 def plots():
     if clinical_data.empty:
         fig, ax = plt.subplots(figsize=(6, 3))
-        ax.text(0.5, 0.5, "Generate clinical data first",
-                ha='center', va='center', fontsize=12)
+        ax.text(0.5, 0.5, "Generate clinical data first", ha='center', va='center', fontsize=12)
         ax.axis('off')
         return fig
 
-    plot_cols = ['Ages', 'BMI', 'Grade', 'Stage', 'Tumor_type',
-                 'Menopause', 'Nulliparity', 'Treatment', 'Survival_Outcome']
+    plot_cols = ['Ages', 'BMI', 'Grade', 'Stage', 'Tumor_type', 'Menopause', 'Nulliparity', 'Treatment', 'Survival_Outcome']
     plot_cols = [c for c in plot_cols if c in clinical_data.columns]
 
-    n    = len(plot_cols)
+    n = len(plot_cols)
     rows = (n + 1) // 2
     fig, axes = plt.subplots(rows, 2, figsize=(14, rows*3), squeeze=False)
-    fig.suptitle("SynthProteomics — Synthetic Clinical Variable Distributions",
-                 fontsize=13, fontweight='bold', y=1.01)
+    fig.suptitle("SynthProteomics — Synthetic Clinical Variable Distributions", fontsize=13, fontweight='bold', y=1.01)
 
     for idx, col in enumerate(plot_cols):
         r, c = divmod(idx, 2)
         ax = axes[r][c]
-        # BUG FIX 5: was axes[c,index].hist(i,...,data=clinical_data)
-        # which passes the column name string, not the data array
         if clinical_data[col].dtype in [np.float64, np.int64, float, int]:
-            ax.hist(clinical_data[col].values, bins=15,
-                    color='steelblue', edgecolor='white', alpha=0.85)
+            ax.hist(clinical_data[col].values, bins=15, color='steelblue', edgecolor='white', alpha=0.85)
         else:
             counts = clinical_data[col].value_counts()
-            ax.bar(counts.index.astype(str), counts.values,
-                   color='steelblue', edgecolor='white', alpha=0.85)
+            ax.bar(counts.index.astype(str), counts.values, color='steelblue', edgecolor='white', alpha=0.85)
             ax.tick_params(axis='x', rotation=35)
         ax.set_title(col, fontweight='bold', fontsize=10)
         ax.set_ylabel("Count", fontsize=9)
         ax.grid(axis='y', alpha=0.3)
 
-    # Hide unused subplot panels
     for idx in range(n, rows * 2):
         r, c = divmod(idx, 2)
         axes[r][c].set_visible(False)
@@ -644,10 +452,11 @@ def plots():
     plt.tight_layout()
     return fig
 
-
+# ══════════════════════════════════════════════════════════════════════
+# GRADIO INTERFACE
+# ══════════════════════════════════════════════════════════════════════
 
 with gr.Blocks(title="SynthProteomics") as demo:
-
     gr.Markdown("""
     # SynthProteomics
     **Probabilistic Rule-Based Synthetic Clinical & Proteomic Data Generator**
@@ -655,86 +464,50 @@ with gr.Blocks(title="SynthProteomics") as demo:
     GitHub: https://github.com/NehaAr/Synthetic-omics-data | MIT License
     """)
 
-    # ── Tab 1: Clinical Data ──────────────────────────────────────────
     with gr.Tab("Clinical Data"):
         gr.Markdown("### Section 2.1 — Probabilistic Rule-Based Clinical Simulation")
         with gr.Row():
             n_records_c = gr.Number(label="Number of Patients", value=100, minimum=10)
-            # ADDED: subtype selector per paper Section 2.3
-            subtype_sel = gr.Dropdown(
-                choices=["All","Endometrioid","Serous","Clear Cell",
-                         "Mucinous","Undifferentiated"],
-                value="All", label="Cancer Subtype Filter"
-            )
-            # ADDED: stage filter per paper Section 2.3
-            stage_sel = gr.Dropdown(
-                choices=["All","Stage1","Stage2","Stage3","Stage4"],
-                value="All", label="Stage Filter"
-            )
+            subtype_sel = gr.Dropdown(choices=["All","Endometrioid","Serous","Clear Cell","Mucinous","Undifferentiated"], value="All", label="Cancer Subtype Filter")
+            stage_sel = gr.Dropdown(choices=["All","Stage1","Stage2","Stage3","Stage4"], value="All", label="Stage Filter")
         col_selector = gr.CheckboxGroup(
-            choices=["Patient_ID","Ages","Ethnicity","Menopause","Grade",
-                     "Tumor_type","Histological_Subtype","Stage","Nulliparity",
-                     "BMI","Myometrial_mm","Treatment","Survival_Outcome"],
-            value=["Patient_ID","Ages","Grade","Stage","Tumor_type",
-                   "Histological_Subtype","Survival_Outcome"],
+            choices=["Patient_ID","Ages","Ethnicity","Menopause","Grade","Tumor_type","Histological_Subtype","Stage","Nulliparity","BMI","Myometrial_mm","Treatment","Survival_Outcome"],
+            value=["Patient_ID","Ages","Grade","Stage","Tumor_type","Histological_Subtype","Survival_Outcome"],
             label="Select Columns to Display"
         )
-        btn_clin   = gr.Button("Generate Clinical Data", variant="primary")
-        out_clin   = gr.Dataframe(label="Synthetic Clinical Data")
-        # ADDED: CSV download per paper Section 2.3
+        btn_clin = gr.Button("Generate Clinical Data", variant="primary")
+        out_clin = gr.Dataframe(label="Synthetic Clinical Data")
         btn_dl_clin = gr.Button("Download as CSV")
-        file_clin   = gr.File(label="Download Clinical CSV")
+        file_clin = gr.File(label="Download Clinical CSV")
 
-        btn_clin.click(
-            generate_person_data,
-            inputs=[n_records_c, col_selector, subtype_sel, stage_sel],
-            outputs=out_clin
-        )
+        btn_clin.click(generate_person_data, inputs=[n_records_c, col_selector, subtype_sel, stage_sel], outputs=out_clin)
         btn_dl_clin.click(download_clinical_csv, inputs=[], outputs=file_clin)
 
-    # ── Tab 2: Protein Abundance ──────────────────────────────────────
     with gr.Tab("Protein Abundance Data"):
-        gr.Markdown("### Section 2.2 — Fuzzy Rule-Based Proteomic Simulation")
-        gr.Markdown(
-            "_Generate clinical data first. Protein abundances are gated by "
-            "patient stage/grade/menopausal status._"
-        )
-        n_records_p  = gr.Number(label="Number of Patients", value=10, minimum=1)
-        protein_input = gr.Textbox(
-            lines=4,
-            label="Protein List (comma-separated)",
-            placeholder="e.g. ANXA2, PKM2, ERBB2, EGFR, MMP9"
-        )
-        btn_prot  = gr.Button("Generate Abundance Data", variant="primary")
-        out_prot  = gr.JSON(label="Log2 Fold-Change Abundance Values [-3 to 3]")
-        # ADDED: CSV download per paper Section 2.3
+        gr.Markdown("### Section 2.2 — Fuzzy Rule & Pathway Co-Regulation Proteomic Simulation")
+        gr.Markdown("_Generate clinical data first. Protein abundances are modulated via Mamdani inference and pathway covariance._")
+        n_records_p = gr.Number(label="Number of Patients", value=10, minimum=1)
+        protein_input = gr.Textbox(lines=4, label="Protein List (comma-separated)", value="ANXA2, PKM2, ERBB2, EGFR, MMP9, CASP3, HMGB3, PRDX1")
+        btn_prot = gr.Button("Generate Abundance Data", variant="primary")
+        out_prot = gr.JSON(label="Log2 Fold-Change Abundance Values [-3 to 3]")
         btn_dl_prot = gr.Button("Download as CSV")
-        file_prot   = gr.File(label="Download Protein CSV")
+        file_prot = gr.File(label="Download Protein CSV")
 
         btn_prot.click(wrapper, inputs=[n_records_p, protein_input], outputs=out_prot)
-        btn_dl_prot.click(
-            download_protein_csv,
-            inputs=[n_records_p, protein_input],
-            outputs=file_prot
-        )
+        btn_dl_prot.click(download_protein_csv, inputs=[n_records_p, protein_input], outputs=file_prot)
 
-    # ── Tab 3: Plots ──────────────────────────────────────────────────
     with gr.Tab("Distribution Plots"):
         gr.Markdown("### Clinical Variable Distributions")
         btn_plot = gr.Button("Generate Plots", variant="primary")
         out_plot = gr.Plot(label="Synthetic Clinical Data Distributions")
         btn_plot.click(plots, inputs=[], outputs=out_plot)
 
-    # ── Tab 4: Use Case 1 — RF Classifier ────────────────────────────
-    # ADDED: Use Case 1 described in paper Section 3 was missing from code
     with gr.Tab("Use Case: Stage Classifier"):
-        gr.Markdown("""
-        ### Section 3 — Use Case 1: Random Forest Stage Classifier
-        *Trains a Random Forest on synthetic data to predict early vs late stage.*
-        Generate clinical data first, then run the classifier.
-        """)
-        btn_rf  = gr.Button("Run Random Forest Classifier", variant="primary")
-        out_rf  = gr.Textbox(label="Classification Results", lines=15)
+        gr.Markdown("### Section 3 — Use Case 1: Random Forest Classifier")
+        gr.Markdown("_Train a Random Forest classifier (100 estimators) on combined clinical and proteomic features to predict early vs late stage._")
+        btn_rf = gr.Button("Run Random Forest Evaluation", variant="primary")
+        out_rf = gr.Textbox(lines=10, label="Classification Results")
         btn_rf.click(use_case_1_random_forest, inputs=[], outputs=out_rf)
 
-demo.launch()
+if __name__ == "__main__":
+    demo.launch()

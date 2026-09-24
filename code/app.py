@@ -102,9 +102,9 @@ protein_abundance_dictionary = {
 clinical_data   = pd.DataFrame()
 protein_data    = []
 
-
+dataset_url = "https://raw.githubusercontent.com/NehaAr/Synthetic-omics-data/main/data/HPA.tsv"
 try:
-    normal_tissue_expression = pd.read_csv('/content/NOT_new_rna.tsv', sep='\t')
+    normal_tissue_expression = pd.read_csv(dataset_url, sep='\t')
 
     normal_tissue_prognostic = (
         normal_tissue_expression[

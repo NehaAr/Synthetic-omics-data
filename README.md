@@ -53,7 +53,7 @@ The two datasets share patient identifiers implicitly through generation order, 
 This is the easiest way to run SynthProteomics — no local setup required.
 
 1. Open a new [Google Colab](https://colab.research.google.com/) notebook.
-2. Copy the full script from `synthproteomics.py` (or this repo's main script) into a cell.
+2. Copy the full script from `app.py` (or this repo's main script) into a cell.
 3. Run the cell. The script will automatically install `gradio` and `scikit-learn`.
 4. A public Gradio link will be printed at the bottom of the output — click it to open the app in a new tab.
 
@@ -62,7 +62,7 @@ This is the easiest way to run SynthProteomics — no local setup required.
 # (pip installs happen automatically inside the script)
 ```
 
-> **Tip:** the script looks for an optional file at `/content/NOT_new_rna.tsv` (see [Optional: adding real HPA expression data](#optional-adding-real-hpa-expression-data) below). If you don't upload this file, the tool still runs — it falls back to a neutral baseline and prints a warning.
+> **Tip:** the script looks for an optional file at `/content/HPA.tsv` (see [Optional: adding real HPA expression data](#optional-adding-real-hpa-expression-data) below). If you don't upload this file, the tool still runs — it falls back to a neutral baseline and prints a warning.
 
 ---
 
@@ -72,7 +72,7 @@ This is the easiest way to run SynthProteomics — no local setup required.
 git clone https://github.com/NehaAr/Synthetic-omics-data.git
 cd Synthetic-omics-data
 pip install -r requirements.txt
-python synthproteomics.py
+python app.py
 ```
 
 This will start a local Gradio server (by default at `http://127.0.0.1:7860`). Open that address in your browser.

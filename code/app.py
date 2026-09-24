@@ -115,7 +115,7 @@ clinical_data = pd.DataFrame()
 protein_data = pd.DataFrame()
 
 try:
-    normal_tissue_expression = pd.read_csv('/content/HPA.tsv', sep='\t')
+    normal_tissue_expression = pd.read_csv('data/HPA.tsv', sep='\t')
     normal_tissue_prognostic = (
         normal_tissue_expression['Cancer prognostics - Uterine Corpus Endometrial Carcinoma (TCGA)']
         .astype(str).str.strip().str.replace(r'[^\d.]', '', regex=True)

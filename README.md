@@ -72,7 +72,7 @@ This is the easiest way to run SynthProteomics — no local setup required.
 git clone https://github.com/NehaAr/Synthetic-omics-data.git
 cd Synthetic-omics-data
 pip install -r requirements.txt
-python app.py
+python code/app.py
 ```
 
 This will start a local Gradio server (by default at `http://127.0.0.1:7860`). Open that address in your browser.
